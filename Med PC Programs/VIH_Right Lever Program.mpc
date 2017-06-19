@@ -1,0 +1,459 @@
+\                        C O M M E N T S
+\
+\ Variable Interval lever holddown schedule.  
+\ Holddown requirement drawn randomly from list v. Change list V to change the schedule (see below)
+\ Session last 60' or until subjects earn 40 reinforcers
+\ 
+\  
+
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+DISKCOLUMNS = 1
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^headOUT = 4      \ IR head exit detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+ 
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^fan = 12         \ Fans for Box ventilation  
+^dipper = 3        \ On Liquid Dipper
+^feederlight = 8   \ Light in the Head Entry Hole; Signal being used in this exp.
+^house = 7         \houselight
+
+    \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   *(a) = Lever Down/Bar Press indicator
+\   *b = counter for a/ Is this an old press or a new press
+\   c
+\   d
+\   e
+\   *f = time elapsed in the ITI
+\   *g = random lever to be used (On"g")
+\   *h = list of levers to be drawn from
+\   *i = time lever is held down in a trial
+\   *j = total number of trials
+\   k
+\   l
+\   m
+\   n
+\   o
+\   *p = trial time counter
+\   q
+\   *r = Display timer
+\   *(s) = lever record
+\   *t = Master Matlab timer
+\   *(u) = ITI duration list
+\   *(v) = LeverDown duration list 
+\   *(w) = time and event code for matlab
+\   *x = ITI dur, selected from list u
+\   *y = LeverDown dur, selected from list v
+\   z (reserved)
+
+
+\  \  SHOW POSITIONS
+\  1 = Session Time
+\  2 = Reins Obtained
+\  3 = Resps Emitted
+\  4 = Holddown Target
+\  4 = ITI Target
+\  7 = Left Lever Count
+\  8 = Right Lever Count
+\  9 = Time Held
+\  10= Time Elapsed in ITI
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041   
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051\***
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061\***
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111\***
+^EndTrial = 0112\***
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117\***
+^OffFan = 0118\***
+^StartIti = 0121\***
+^EndIti = 0122\***
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LLeverDown = 1015    \***
+^RLeverDown = 1016    \***
+^LLeverUp = 1017        \***
+^RLeverUp = 1018        \***
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306   
+                       
+
+^FeederLightOn = 0101  \***
+^FeederLightOff = 0102  \***
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=100000 
+dim m = 2      
+               
+list a = 0,0
+list b = 0,0
+list h = 1
+list s = 0,0 
+\ITI duration list (in hundredths of a second)
+list u = 21, 61, 103, 146, 189, 234, 279, 326, 373, 422, 472, 523, 576, 630, 685, 743, 801, 862, 924, 989, 1056, 1125, 1196, 1270, 1347, 1427, 1510, 1597, 1688, 1783, 1883, 1989, 2100, 2218, 2343 \20 Seconds
+
+
+\List of Variable Interval Hold Requirements (Exponential distributions truncated at 20 and 80percent )
+list v =  5, 8, 10, 10, 11, 11, 12, 13, 14, 14, 15, 17, 17, 18, 19, 21, 21, 22, 23, 30, 36, 36, 40, 41, 43, 47, 48, 57, 64, 64, 84, 88 \ 0.5 second VIH
+\list v =  25, 28, 28, 29, 36, 39, 42, 48, 54, 54, 56, 57, 60, 60, 63, 68, 70, 75, 76, 97, 105, 105, 108, 109, 125, 129, 136, 137, 137, 138, 141, 150 \ 1.0 second VIH
+\list v =  45, 46, 51, 58, 74, 85, 95, 102, 109, 120, 124, 128, 133, 159, 163, 168, 182, 183, 209, 233, 267, 267, 270, 285, 285, 295, 339, 341, 360, 364, 376, 385 \ 2.0 second VIH
+\list v =  99, 99, 102, 118, 125, 150, 173, 174, 188, 221, 241, 269, 271, 285, 286, 288, 319, 322, 332, 350, 363, 377, 399, 399, 416, 434, 473, 487, 568, 580, 666, 678 \ 4.0 second VIH
+\list v =  189, 204, 264, 284, 304, 312, 320, 328, 359, 378, 407, 430, 452, 467, 494, 498, 506, 515, 537, 583, 629, 686, 701, 720, 729, 803, 803, 813, 863, 881, 888, 893 \ 6.0 second VIH
+\list v =  121, 173, 182, 200, 236, 261, 268, 271, 287, 309, 310, 340, 377, 385, 396, 440, 483, 521, 554, 554, 564, 571, 572, 587, 602, 742, 801, 874, 877, 1072, 1142, 1170 \ 8.0 second VIH
+\list v =  201, 219, 223, 304, 325, 383, 416, 420, 432, 465, 602, 641, 651, 657, 714, 790, 838, 840, 861, 873, 875, 918, 939, 988, 1080, 1231, 1313, 1619, 1752, 1789, 1898, 2016 \ 10 second VIH
+
+
+    \*** TO change the VIH shcedule just comment out the line of list v =  for the 0.5 second and uncomment the line with the scheudle you need
+
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = Left Lever Extended
+\ z2 = Right Lever Extended
+\ z3 = Left Lever Retracted (Reinforcement)
+\ z4 = Right Lever Retracted (Reinforcement)
+\ z5 = Shut Down EVERYTHING
+\ z6 = Left Lever Begin Counting Time
+\ z7 = Left Lever Stop Counting Time
+\ z8 = Right Lever Begin Counting Time
+\ z9 = Right Lever Stop Counting Time
+\ z10= Trial Start Contingency Reset
+\ z11= Beep!
+\===============================
+
+S.S.1,    \===MATLAB TIMER "T"===
+s1,     
+    #start: set p = -1;         
+        --->s2
+
+S2,        \=====update Matlab clock, display====
+    0.01": set T = T + 100000;
+    set r = r+0.01;
+        SHOW 1,SessionTime,r;
+    SHOW 2,Reins,j;
+    SHOW 3,Resp,s(0)+s(1);
+    SHOW 4,Hold Dur,y;
+    SHOW 5,ITI Dur,x;
+    Show 7,LLever,s(0);
+    Show 8,RLever,s(1);
+    Show 9,Held Time,i;
+    Show 10,ITI Time,f;
+        --->sx  \Keeps time in 100th of a second
+
+
+S.S.2,    \===INITIALIZE===
+S1,        \=====initialization====
+    #start: ON^fan;
+        add p; set w(p)= ^OnFan + T;
+        ---> s2
+
+S2,        \=====wait an hour====
+    60': z5;
+        --->sx
+
+
+S.S.3,    \===TRIAL AND ITI GENERATOR===
+S1,        \=====initialization====
+    #start:  randd x = u;
+        set i = 0;
+        add p; set w(p)= ^StartSession + T;
+        --->s2
+
+S2,        \=====iti====
+    .01": add f;
+        if f >= x [@over, @notover]                \Check if ITI over
+            @over: z10;
+        add p; set w(p) = ^EndIti + T;
+                --->s3
+            @notover: --->sx
+
+S3,        \=====trial start=====
+    0": add p; set w(p) = ^StartTrial + T;
+        ON^house;
+        add p; set w(p)= ^HouseLightOn + T;
+        randd y = v;
+        set i = 0;
+        randd g = h;
+        ONg;
+        if g = 1 [@leftlever, @rightlever]
+            @leftlever: z1;
+                add p; set w(p) = ^LLeverOn + T;
+                --->s4
+            @rightlever: z2;
+                add p; set w(p) = ^RLeverOn + T;
+                --->s5
+
+S4,        \=====left lever holding pattern=====
+    #Z3: add p; set w(p) = ^EndTrial + T;
+        OFF^house;
+        add p; set w(p) = ^HouseLightOff + T;
+        add j;
+        --->s6
+
+S5,        \=====right lever holding pattern=====
+    #Z4: add p; set w(p) = ^EndTrial + T;
+        OFF^house;
+        add p; set w(p) = ^HouseLightOff + T;
+        add j;
+        --->s6
+
+S6,        \=====rein start=====
+    0": ON^dipper;
+        add p; set w(p) = ^DipOn + T;
+    z11;
+        --->s7
+
+S7,        \=====rein wait=====
+    4.5": OFF^dipper;
+        add p; set w(p) = ^DipOff + T;
+        OFFg;
+        add p; set w(p) = ^LLeverOff + T;
+        add p; set w(p) = ^StartIti + T;
+        --->s8
+
+S8,        \=====check for session end=====
+    0": if j = 40 [@over, @notover]
+            @over: z5;
+                --->sx
+            @notover: set f = 0;
+        randd x = u;
+        SHOW 4,ITI,x;
+                --->s2
+
+
+S.S.4,    \===LEVER SUMMATION===
+S1,        \=====initialization====
+    #start: --->s2
+
+S2,        \=====wait for z-pulse====
+    #Z1: set a(0) = 0;
+        --->s3
+    #Z2: set a(1) = 0;
+        --->s4
+
+S3,        \=====left lever-down processing====
+    #R^LLever2: z6;
+    add a(0);
+        --->sx 
+    .01": if a(0) > 0 [@press, @nopress]
+            @press: if b(0) = 0 [@leveron, @noleveron]
+                @leveron: set b(0) = 1;
+                    set a(0) = 0; 
+                --->sx
+                @noleveron:  set b(0) = 1;
+                    set a(0) = 0;
+                    --->sx
+            @nopress: if b(0) = 1 [@stop, @nostop]
+                @stop: set b(0) = a(0);
+                    set a(0) = 0;
+                    set i = 0;
+                    z7;
+                    --->sx
+                @nostop:  set b(0) = a(0);
+                    set a(0) = 0;
+                    --->sx
+    #Z3: --->s2
+
+S4,        \=====right lever-down processing====
+    #R^RLever2: z8;
+    add a(1);
+        --->sx 
+    .01": if a(1) > 0 [@press, @nopress]
+            @press: if b(1) = 0 [@leveron, @noleveron]
+                @leveron: set b(1) = 1;
+                    set a(1) = 0; 
+                    --->sx
+                @noleveron: set b(1) = 1;
+                    set a(1) = 0;
+                    --->sx
+            @nopress: if b(1) = 1 [@stop, @nostop]
+                @stop: set b(1) = a(1);
+                    set a(1) = 0;
+                    set i = 0;
+                z9;
+                    --->sx
+                @nostop: set b(1) = a(1);
+                    set a(1) = 0;
+                    --->sx
+    #Z4: --->s2
+
+
+S.S.5,    \===LEFT LEVER CONTINGENCY EVALUATION===
+S1,        \=====initialization====
+    #start: --->s2
+
+S2,        \=====wait for z-pulse to start====
+    #Z6: add s(0);
+        show 2, LLever, s(0);
+        add p; set w(p) = ^LLeverDown+T;
+    --->s3
+
+S3,        \=====count while waiting for z-pulse to stop====
+    0.01": add i;
+        if i >= y [@over, @notover]                \Check if LeverDown over
+            @over: z3;
+                z4;
+        add p; set w(p) = ^LLeverUp + T;
+                --->s4
+            @notover: --->sx
+    #Z7: add p; set w(p) = ^LLeverUp + T; 
+    --->s2
+
+S4,    \====loop back==
+    #Z10: --->s2
+
+
+S.S.6,    \===RIGHT LEVEL CONTINGENCY EVALUATION===
+S1,        \=====initialization====
+    #start: --->s2
+
+S2,        \=====wait for z-pulse to start====
+    #Z8: add s(1);
+        show 2, RLever, s(1);
+    add p; set w(p) = ^RLeverDown+T;
+    --->s3
+
+S3,        \=====count while waiting for z-pulse to stop====
+    0.01": add i;
+        if i >= y [@over, @notover]                \Check if LeverDown over
+            @over: z3;
+                z4;
+        add p; set w(p) = ^RLeverUp + T;
+                --->s4
+            @notover: --->sx
+    #Z9: add p; set w(p) = ^RLeverUp + T;  
+    --->s2
+
+S4,    \====loop back==
+    #Z10: --->s2
+
+
+S.S.7,    \===SESSION ENDER===
+S1,        \=====initialization====
+    #start: --->s2
+
+S2,        \=====wait for z-pulse====
+    #Z5: --->s3
+
+S3,        \=====shut down everything====
+    0": OFF^house;
+        add p; set w(p) = ^HouseLightOff + T;
+        OFF^fan;
+        add p; set w(p) = ^OffFan + T;
+        add p; set w(p)= ^EndSession + T;
+        add p; set w(p)=-987.987;
+        --->stopabortflush
+
+
+S.S.8,    \===BEEP!===
+S1,        \=====initialization====
+    #start: --->s2
+
+S2,        \=====wait for z-pulse====
+    #Z11: ~SetFreq (MG,BOX, 3000);~;
+    ~ToneOn(MG,Box);~;
+    add p; set w(p) = ^ToneOn1 + T;
+    --->s3
+
+S3,        \=====tone ender====
+    0.5": ~ToneOff(MG,Box);~;
+    add p; set w(p) = ^ToneOff1 + T;
+    --->s2
+
+
+S.S.9,  \Head Entry (Input 3) COUNTER
+S1,
+  
+     #START:SHOW 11,HeadIn,0--->S2
+
+S2,
+   
+      #R^headIN: SHOW 11,HeadIn,1; add p; set w(p) = ^PokeOn1 + T---> sx
+      #R^headOUT: SHOW 11,HeadIn,0; add p; set w(p) = ^PokeOff1 + T--->sx 
+

@@ -1,0 +1,307 @@
+\                                                                        
+\ ******************************************************************
+\
+\
+\                        C O M M E N T S
+\
+\ FR-1 lever press.  
+\ ITI between lever presentations is mean of 60s
+\ 3 reinforced presses on one lever before lever is retracted.
+\ Program ends after 45 minutes or 40 earned reinforcers are delivered
+\ Modified 032515 to add box test and pavlovian training for first 20 presses
+
+
+
+\  CONSTANTS USED IN THIS PROGRAM
+\  Inputs ****************************
+^LLev = 1       \  left lever press
+^RLev = 2       \  right lever press
+^headIN = 3       \  IR head entry detector
+^headOUT = 4      \ IR head exit detector
+
+ 
+
+                  \  Outputs ****************************
+^LLever = 1
+^RLever = 2
+^Dipper = 3        \ On Liquid Dipper
+^RedLightLeft = 4      \stimulus lights above Left Lever
+^YellowLightLeft = 5
+^GreenLightLeft = 6
+^House = 7         \houselight
+^FeederLight = 8   \ Light in the Head Entry Hole; Signal being used in this exp.
+^RedLightRight = 9     \stimulus lights above Right Lever
+^YellowLightRight = 10
+^GreenLightRight = 11                                          
+^Fan = 12         \ Fans for Box ventilation 
+^Pellet = 14 
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = holder for lever press start
+\   b = holder for lever press end
+\   c = holder for ITI duration
+\   d = Counter for presses (resetting)   
+\   e = holder for trial type selection
+\   f = surrent state indicator (1=ITI, 2=Right Trial, 3=Left Trial)
+\   g = 
+\   h = list for trial type
+\   i = 
+\   j = 
+\   k = session timer (sec)
+\   l = pellet counter
+\   m = ITI durations
+\   n = 
+\   o = 
+\   p = event counter for w array
+\   q = 
+\   r = press counter (0=left press, 1=right press)
+\   s = trial counter ()
+\   t = counter for data array timer          
+\   u = 
+\   v = 
+\  (w) = Time Stamped Event Code array
+\   x = 
+\   y = resetting time counter for state duration
+
+
+\  SHOW POSITIONS
+\  1 = master timer
+\  2 = # Left Lever Presses
+\  3 = # Right Lever Presses
+\  4 = # Pellets
+\  5 = # Dippers
+
+\   Z-PULSES USED IN THIS PROGRAM                   
+
+\   z1 = start new trial
+\   z2 = end program          
+\   z3 = reset state duration 
+\   z4 = 
+\   z5 = 
+\   z6 = Present dipper                                                                          
+\   z7 = 
+\   z8 = left lever press                    
+\   z9 = right lever press
+
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^PelletDrop = 0022
+^DipOn = 0025
+^DipOff = 0026
+
+^LLeverOn = 0027 
+^RLeverOn= 0028
+   
+^LLeverOff = 0029 
+^RLeverOff = 0030 
+
+                                                                     
+^LightOffHouse = 0034  
+^LightOnHouse = 0044
+
+^FeederLightOn = 0101  
+^FeederLightOff = 0102
+
+^Beep = 0105
+
+^StartTrial = 0111
+^EndTrial = 0112
+
+^StartSession = 0113  
+^EndSession = 0114  
+ 
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+
+^OnFan = 0117
+^OffFan = 0118
+
+^StartIti = 0121
+^EndIti = 0122
+
+^HeadExit = 1001 
+^HeadEntry = 1011 
+
+^LPressOn = 1015
+^RPressOn = 1016
+
+^LPressOff = 1017   
+^RPressOff = 1018
+
+\================================================================
+
+
+\ w array is used for matlab codes
+
+DISKFORMAT = 15
+DISKVARS = W, S
+DISKCOLUMNS = 1
+
+dim w=100000
+dim s=6
+dim k=6
+dim a=2
+dim b=2
+
+
+\ List for lever decision (1=left, 2=right)
+\list h = 1,1,1,1,1,2,2,2,2,2 
+list h = 1,2 
+
+\ List of ITI durations Mean=30s
+list m = 3600,400,23200,8000,4400,3200,1200,1600,18400,800,1200,400,400,
+	 18400,1600,7200,11200,5200,2400,400,9600,1200,5200,8800,1600,3200,
+	 5200,2000,800,10800,400,8800,400,15200,800,3200,1600,6400,14000,800
+
+
+\short ITI for program testing
+\list m = 500 
+
+
+S.S.1,	\Mandatory Box Test: Left and right levers, tone, dipper, house light
+	\This transitions to null state after the box test is completed
+	\Program cannot start unless this box test is performed and all components are working.
+s1,
+	1":	~initANL926;~;~SetRack (MG, 2);~;
+            	~SetAmp (MG,BOX, 90);~;
+            	~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+		on^LLever; on^dipper; on^house--->s2
+s2,
+	#R^LLev:off^LLever;on^RLever;~ondur(MG, BOX, 1000);~;  --->s3
+s3,
+	#R^RLev:off^RLever;off^feederlight;  --->s4
+s4,
+	#R^headIN:  off^dipper; off^house;  --->s5
+s5,
+	#start:	z10--->s6
+
+S.S.2,  \Time Counter for Time Stamped Event Codes
+s1,     
+	#start:	SET p = -1; --->s2
+s2,    
+	.01":	SET T = T + 100000--->sx
+
+S.S.3,
+s1,	\Session Controller 
+	#z10: 	add p;set w(p)=^StartSession+T; 
+            	ON^Fan; add p;set w(p)=^OnFan+T;
+		ON^House;z1--->s2
+s2,
+	#z2:	--->s3
+	45':	--->s3
+s3,
+	5":	show 2, LeftPress, s(0); 
+       	  	show 3, RightPress, s(1);
+	  	off^Fan; add p;set w(p)=^OffFan+T;   
+          	off^House;
+		add p;set w(p)=^EndSession+T;
+          	add p;set w(p)=-987.987; ---> stopabortflush
+                                                                          
+S.S.4,	\Trial Controller
+	\Session begins with 60s delay before the first lever trial
+s1,     
+	#z1:	set f=1; z3; add p;set w(p)= ^StartITI+T;
+		set c=6000; randd e=h; --->s2
+s2,
+	c#T:  	add p;set w(p)= ^EndITI+T;
+        	if e=1 [@left, @Right]
+            		@left:	set f=3; z3;
+				ON^LLever;add p;set w(p)=^LLeverOn+T;
+                  		show 2, LeftTr, y; --->s3
+            		@right: set f=2; z3;
+				ON^RLever;add p;set w(p)=^RLeverOn+T;
+                           	show 2, RtTr, y; --->s3
+
+s3,                                                                   
+	#z8:	add s(0);add d; z6; 
+        	show 3, LeftPresses,s(0)--->s4   
+	#z9:	add s(1); add d; z6;
+        	show 4, RightPresses,s(1) --->s5 
+
+s4,	 
+    	#z3: 	if d>1 [@ITI, @more]
+			@ITI: 	set d=0;set f=1; z3;
+				Off^LLever;add p;set w(p)=^LLeverOff+T;
+	  			add p;set w(p)= ^StartITI+T;
+	   			randd c=m; randd e=h;--->s2
+			@more:  --->s3
+s5,
+	#z3:	if d>1 [@ITI, @more]
+			@ITI: 	set d=0;set f=1; z3;
+				Off^RLever;add p;set w(p)=^RLeverOff+T;
+	  			add p;set w(p)= ^StartITI+T;
+	   			randd c=m; randd e=h;--->s2
+			@more:  --->s3
+
+S.S.5,  \Head Entry Detector
+s1,
+	#z10:--->s2
+S2,   
+	#R^headIN:	add p;set w(p)=^HeadEntry+T--->sx
+	#R^headOUT:	add p;set w(p)=^HeadExit+T--->sx 
+
+S.S.6, \Dipper Delivery
+s1,
+	#z6:  	ON^dipper;add p;set w(p)=^dipON+T; 
+		add j; show 5, Dip, j--->s2  
+s2, 
+	.5":	~ondur(MG, BOX, 200);~;
+		add p;set w(p)=^Beep+T;--->s3 
+s3,   
+	4.5":	OFF^dipper;add p;set w(p)=^DipOff+T;
+            	if j>39 [@End, @More]
+			@End:  z2 --->s1
+               		@More: z3 --->s1
+
+S.S.8,  \Bar Press Detector - Left Lever       
+s1,
+	#z10: --->s2
+s2,
+	.05":	if a(0) > 0 [@press, @nopress]
+            		@press: if b(0) = 0 [@leveron, @noleveron]
+                   		@leveron: z8;  add p; set w(p)= ^LPressOn+T;
+                            		set b(0) = 1; set a(0) = 0; --->s2
+                    		@noleveron: set b(0) = 1; set a(0) = 0--->s2
+        		@nopress: if b(0) = 1 [@stop, @nostop]     
+                		@stop:  add p;set w(p)= ^LPressOff+T; 
+                      			set b(0) = a(0); set a(0) = 0; --->s2
+                		@nostop:set b(0) = a(0); set a(0) = 0; --->s2               
+        #R^LLev: set a(0)=a(0)+1; --->sx        
+                                                 
+S.S.9,  \Bar Press Detector - Right Lever         
+s1,                        
+    	#z10: 	--->s2          
+s2,
+	.05":	if a(1) > 0 [@press, @nopress]     
+           		@press: if b(1) = 0 [@leveron, @noleveron]
+                    		@leveron: z9; add p;set w(p)= ^RPressOn+T;  
+                           		set b(1) = 1; set a(1) = 0; --->s2
+                   		@noleveron: set b(1) = 1; set a(1) = 0--->s2
+            		@nopress: if b(1) = 1 [@stop, @nostop]
+                    		@stop:   add p;set w(p)= ^RPressOff+T;                    
+                          set b(1) = a(1); set a(1) = 0; --->s2     
+                    		@nostop:set b(1) = a(1); set a(1) = 0; --->s2 
+        #R^RLev:set a(1)=a(1)+1; --->sx 
+
+s.s.11 \Session Duration Clock                
+s1,
+	#z10:	--->s2                                                                
+s2,
+	1":  	set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            		@AddMin: add k(1); set k(0)=0; 
+                 		set k(2)=k(0)+k(1);show 1, Session, k(2) --->s2                                
+            		@NoAdd:	set k(2)=k(0)+k(1);show 1, Session, k(2)--->s2
+S.S.12  \Resetting duration timer
+s1,
+	#z10:	--->s2
+s2,
+	1":	add y; if f=1 [@ITI, @other]
+			@iti: show 2, ITI, y --->s2
+			@other: If f=2 [@RightTrial, @LeftTrial]
+				@RightTrial:show 2, RighttTr, y--->s2
+				@LeftTrial: show 2, LeftTr, y --->s2
+	#z3:	set y=0 --->s2 
